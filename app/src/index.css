@@ -1,0 +1,125 @@
+/* `important`: Chakra injects its own `@layer reset,base,tokens,recipes` at
+   runtime, after this stylesheet loads — since it's a new-to-the-document
+   layer set, it sorts ABOVE Tailwind's `utilities` layer and silently wins
+   the cascade (e.g. every padding/margin utility computing to 0). Chakra is
+   used narrowly here for behavior only, so Tailwind should always win. */
+@import "tailwindcss" important;
+
+/* ─────────────────────────────────────────────────────────────────────────
+   LS Analytics design tokens.
+   Distinct identity from CRM's teal-on-white: a warm bone canvas, near-black
+   warm ink, and a single disciplined antique-gold accent — evocative of
+   precious metal without reading as generic-SaaS-blue or CRM's teal.
+   Chart categorical/sequential/diverging/status hues are the dataviz skill's
+   validated defaults, left unchanged (re-deriving custom hues risks failing
+   the CVD gates; brand identity is carried by chrome, not chart color).
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-label: "Inter", system-ui, -apple-system, sans-serif;
+  --font-caption: "Open Sans", system-ui, -apple-system, sans-serif;
+
+  /* Surfaces */
+  --color-canvas: #f8f6f1;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f2efe8;
+
+  /* Ink */
+  --color-ink: #16130f;
+  --color-ink-secondary: #5c564c;
+  --color-ink-muted: #8c8577;
+  --color-border: rgba(22, 19, 15, 0.09);
+  --color-border-strong: rgba(22, 19, 15, 0.15);
+  --color-hairline: #e7e2d8;
+  --color-baseline: #c9c2b3;
+
+  /* Brand accent — antique gold */
+  --color-accent: #b08d4f;
+  --color-accent-dark: #8a6c38;
+  --color-accent-light: #f6eedd;
+  --color-accent-ring: rgba(176, 141, 79, 0.35);
+
+  /* Obsidian — the one deliberate dark panel (hero band only) */
+  --color-obsidian: #14110e;
+  --color-obsidian-raised: #201a14;
+  --color-obsidian-border: rgba(255, 255, 255, 0.1);
+  --color-on-obsidian: #ffffff;
+  --color-on-obsidian-secondary: rgba(255, 255, 255, 0.66);
+  --color-on-obsidian-muted: rgba(255, 255, 255, 0.4);
+  --color-accent-on-obsidian: #d9b978;
+
+  /* Status (fixed, never themed) */
+  --color-good: #0ca30c;
+  --color-good-tint: #e3f6e1;
+  --color-warning: #fab219;
+  --color-warning-tint: #fff2da;
+  --color-serious: #ec835a;
+  --color-serious-tint: #fce4d9;
+  --color-critical: #d03b3b;
+  --color-critical-tint: #fbe1e0;
+
+  /* Categorical (fixed order — never cycled) */
+  --color-cat-1: #2a78d6;
+  --color-cat-2: #eb6834;
+  --color-cat-3: #1baf7a;
+  --color-cat-4: #eda100;
+  --color-cat-5: #e87ba4;
+  --color-cat-6: #008300;
+  --color-cat-7: #4a3aa7;
+  --color-cat-8: #e34948;
+
+  /* Sequential — blue, light -> dark */
+  --color-seq-100: #cde2fb;
+  --color-seq-200: #9ec5f4;
+  --color-seq-300: #6da7ec;
+  --color-seq-400: #3987e5;
+  --color-seq-500: #256abf;
+  --color-seq-600: #184f95;
+  --color-seq-700: #0d366b;
+
+  /* Diverging — blue <-> red, neutral gray midpoint */
+  --color-div-pos-strong: #2a78d6;
+  --color-div-pos-mid: #9ec5f4;
+  --color-div-neutral: #f0efec;
+  --color-div-neg-mid: #f3b3b2;
+  --color-div-neg-strong: #e34948;
+
+  --shadow-card: 0 1px 2px rgba(22, 19, 15, 0.04), 0 8px 24px -12px rgba(22, 19, 15, 0.12);
+  --shadow-panel: 0 24px 64px -24px rgba(20, 17, 14, 0.45);
+}
+
+html,
+body {
+  color-scheme: light;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+* {
+  font-family: "Outfit", sans-serif;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Global light scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(22, 19, 15, 0.15);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(22, 19, 15, 0.28);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
