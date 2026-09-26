@@ -459,6 +459,136 @@ export function stalledPipelineValue(branch: BranchFilter, thresholdDays = 60) {
   return { count: stalled.length, valueAED: stalled.reduce((a, r) => a + r.valueAED, 0) };
 }
 
+export interface StageAgingBucketItem {
+  key: string;
+  label: string;
+  valueAED: number;
+  count: number;
+  pctOfStage: number;
+}
+
+export interface StageAgingMatrixRow {
+  stageKey: string;
+  stageLabel: string;
+  stageIndex: number;
+  totalValueAED: number;
+  totalCount: number;
+  hasStalled: boolean;
+  hasCritical: boolean;
+  buckets: StageAgingBucketItem[];
+}
+
+export interface StalledDealItem {
+  id: string;
+  title: string;
+  accountName: string;
+  stage: string;
+  valueAED: number;
+  daysInStage: number;
+}
+
+export interface StageAgingMatrixData {
+  rows: StageAgingMatrixRow[];
+  summary: {
+    totalValueAED: number;
+    totalCount: number;
+    freshValueAED: number; // 0-30d
+    freshPct: number;
+    maturingValueAED: number; // 31-60d
+    maturingPct: number;
+    stagnantValueAED: number; // 61-90d
+    stagnantPct: number;
+    criticalValueAED: number; // 90d+
+    criticalPct: number;
+    stalledValueAED: number; // 60d+
+    stalledCount: number;
+    stalledDeals: StalledDealItem[];
+  };
+}
+
+export function stageAgingMatrixData(branch: BranchFilter): StageAgingMatrixData {
+  const open = openPipelineRecords(branch);
+  const totalValueAED = open.reduce((a, r) => a + r.valueAED, 0) || 1;
+  const totalCount = open.length || 1;
+
+  const rows: StageAgingMatrixRow[] = OPEN_STAGES.map((stageLabel, stageIndex) => {
+    const stageRecords = open.filter((r) => r.currentStage === stageLabel);
+    const stageTotalValue = stageRecords.reduce((a, r) => a + r.valueAED, 0);
+    const stageTotalCount = stageRecords.length;
+
+    const buckets: StageAgingBucketItem[] = AGING_BUCKETS.map((b, i) => {
+      const prevMax = i === 0 ? 0 : AGING_BUCKETS[i - 1].max;
+      const inBucket = stageRecords.filter((r) => r.daysInCurrentStage > prevMax && r.daysInCurrentStage <= b.max);
+      const val = inBucket.reduce((a, r) => a + r.valueAED, 0);
+      return {
+        key: b.key,
+        label: b.label,
+        valueAED: val,
+        count: inBucket.length,
+        pctOfStage: stageTotalValue ? (val / stageTotalValue) * 100 : 0,
+      };
+    });
+
+    const hasStalled = buckets[2]?.count > 0;
+    const hasCritical = buckets[3]?.count > 0;
+
+    return {
+      stageKey: stageLabel.toLowerCase().replace(/\s+/g, "-"),
+      stageLabel,
+      stageIndex,
+      totalValueAED: stageTotalValue,
+      totalCount: stageTotalCount,
+      hasStalled,
+      hasCritical,
+      buckets,
+    };
+  });
+
+  const getBucketVal = (i: number) => {
+    const prevMax = i === 0 ? 0 : AGING_BUCKETS[i - 1].max;
+    return open
+      .filter((r) => r.daysInCurrentStage > prevMax && r.daysInCurrentStage <= AGING_BUCKETS[i].max)
+      .reduce((a, r) => a + r.valueAED, 0);
+  };
+
+  const freshVal = getBucketVal(0);
+  const maturingVal = getBucketVal(1);
+  const stagnantVal = getBucketVal(2);
+  const criticalVal = getBucketVal(3);
+
+  const stalledRecords = open.filter((r) => r.daysInCurrentStage > 60);
+  const stalledValueAED = stalledRecords.reduce((a, r) => a + r.valueAED, 0);
+  const stalledDeals: StalledDealItem[] = stalledRecords
+    .sort((a, b) => b.valueAED - a.valueAED)
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      accountName: r.accountName,
+      stage: r.currentStage,
+      valueAED: r.valueAED,
+      daysInStage: r.daysInCurrentStage,
+    }));
+
+  return {
+    rows,
+    summary: {
+      totalValueAED,
+      totalCount,
+      freshValueAED: freshVal,
+      freshPct: (freshVal / totalValueAED) * 100,
+      maturingValueAED: maturingVal,
+      maturingPct: (maturingVal / totalValueAED) * 100,
+      stagnantValueAED: stagnantVal,
+      stagnantPct: (stagnantVal / totalValueAED) * 100,
+      criticalValueAED: criticalVal,
+      criticalPct: (criticalVal / totalValueAED) * 100,
+      stalledValueAED,
+      stalledCount: stalledRecords.length,
+      stalledDeals,
+    },
+  };
+}
+
 export function topOpenOpportunities(branch: BranchFilter, n = 8) {
   return [...openPipelineRecords(branch)]
     .sort((a, b) => b.valueAED - a.valueAED)

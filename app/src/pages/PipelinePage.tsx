@@ -7,7 +7,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { OpportunityAttentionList } from "@/components/ui/OpportunityAttentionList";
 import { HorizonCascade } from "@/components/charts/HorizonCascade";
 import { WinLossMirror } from "@/components/charts/WinLossMirror";
-import { SeverityCompositionBar } from "@/components/charts/SeverityCompositionBar";
+import { StageAgingMatrix } from "@/components/charts/StageAgingMatrix";
 import { RankedBar } from "@/components/charts/RankedBar";
 import { SourceQuadrant } from "@/components/charts/SourceQuadrant";
 import { TrendLine } from "@/components/charts/TrendLine";
@@ -26,6 +26,7 @@ import {
   winRateTrendYoY,
   stageAgingBuckets,
   stalledPipelineValue,
+  stageAgingMatrixData,
   topOpenOpportunities,
   sourceQuadrantData,
   salesmanPipelineRanked,
@@ -56,6 +57,7 @@ function buildPipeline(period: PeriodPreset, branch: BranchFilter) {
 
   const aging = stageAgingBuckets(branch, AGING_STATUS_RAMP);
   const stalled = stalledPipelineValue(branch);
+  const agingMatrix = stageAgingMatrixData(branch);
   const topOpps = topOpenOpportunities(branch, 8);
 
   const quadrant = sourceQuadrantData(branch);
@@ -97,6 +99,7 @@ function buildPipeline(period: PeriodPreset, branch: BranchFilter) {
     winTrend,
     aging,
     stalled,
+    agingMatrix,
     topOpps,
     quadrant,
     salesmen,
@@ -162,30 +165,17 @@ export function PipelinePage() {
           />
         )}
 
-        {/* ── Tier 2: Pipeline Velocity & Concentration — Time in stage & Top opportunities ── */}
+        {/* ── Tier 2: Pipeline Velocity & Concentration — 2D Stage Aging Matrix & Top opportunities ── */}
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <Card className="lg:col-span-2">
-            <CardHeader title="Time in current stage" subtitle="Open pipeline value, by days since last stage change" />
             {!data ? (
-              <ChartSkeleton height={80} />
+              <ChartSkeleton height={320} />
             ) : (
-              <>
-                <SeverityCompositionBar buckets={data.aging} valueFormatter={formatAEDCompact} height={40} />
-                <div className="mt-4">
-                  <InsightCallout
-                    tone={data.stalled.valueAED > data.hero.openValueAED * 0.2 ? "warning" : "accent"}
-                    text={
-                      data.stalled.count > 0
-                        ? `${formatAEDCompact(data.stalled.valueAED)} across ${formatNumber(data.stalled.count)} deals has sat in the same stage for 60+ days without progressing — the highest-leverage list to push forward or requalify.`
-                        : "No open deals have been sitting in the same stage for more than 60 days — the pipeline is moving at a healthy pace."
-                    }
-                  />
-                </div>
-              </>
+              <StageAgingMatrix data={data.agingMatrix} valueFormatter={formatAEDCompact} />
             )}
           </Card>
           <Card>
-            <CardHeader title="Top open opportunities" subtitle="By deal value" />
+            <CardHeader title="Top open opportunities" subtitle="By deal value across active stages" />
             {!data ? <ChartSkeleton height={260} /> : <RankedBar data={data.topOpps} valueFormatter={formatAEDCompact} />}
           </Card>
         </section>
