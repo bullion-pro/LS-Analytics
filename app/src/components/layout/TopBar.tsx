@@ -129,7 +129,7 @@ function AccountMenu() {
           <div className="hidden xl:block leading-tight text-left">
             <div className="text-[12px] font-semibold text-[var(--color-ink)]">{CURRENT_USER.name}</div>
             <div className="font-label text-[9.5px] font-medium text-[var(--color-ink-muted)]">
-              {CURRENT_USER.role} · {ORGANIZATION.name}
+              {CURRENT_USER.role} Â· {ORGANIZATION.name}
             </div>
           </div>
           <ChevronDown size={12} strokeWidth={2} className="text-[var(--color-ink-muted)]" />
@@ -141,7 +141,7 @@ function AccountMenu() {
             <div className="px-2.5 py-2">
               <div className="text-[13px] font-medium text-[var(--color-ink)]">{CURRENT_USER.name}</div>
               <div className="font-label text-[11px] text-[var(--color-ink-muted)]">
-                {CURRENT_USER.role} · {ORGANIZATION.name}
+                {CURRENT_USER.role} Â· {ORGANIZATION.name}
               </div>
             </div>
             <div className="my-1 h-px bg-[var(--color-border)]" />
