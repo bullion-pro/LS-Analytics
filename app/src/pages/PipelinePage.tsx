@@ -1,16 +1,13 @@
 import { createColumnHelper } from "@tanstack/react-table";
-import { Layers, Percent, Coins } from "lucide-react";
 import { TopBar } from "@/components/layout/TopBar";
-import { HeroBand } from "@/components/layout/HeroBand";
 import { Card, CardHeader } from "@/components/ui/Card";
-import { StatTile } from "@/components/ui/StatTile";
-import { DeltaPill } from "@/components/ui/DeltaPill";
-import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { ChartSkeleton } from "@/components/ui/ChartSkeleton";
 import { InsightCallout } from "@/components/ui/InsightCallout";
+import { QuietTag } from "@/components/ui/QuietTag";
 import { DataTable } from "@/components/ui/DataTable";
 import { OpportunityAttentionList } from "@/components/ui/OpportunityAttentionList";
 import { StageFunnel } from "@/components/charts/StageFunnel";
+import { HorizonCascade } from "@/components/charts/HorizonCascade";
 import { WinLossMirror } from "@/components/charts/WinLossMirror";
 import { SeverityCompositionBar } from "@/components/charts/SeverityCompositionBar";
 import { RankedBar } from "@/components/charts/RankedBar";
@@ -142,85 +139,50 @@ export function PipelinePage() {
   const periodLabel = PERIOD_PRESETS.find((p) => p.id === period)?.label ?? "";
   const branchLabel = branch === "all" ? "All Branches" : (BRANCHES.find((b) => b.id === branch)?.name ?? "All Branches");
 
-  const { data, isPending, isPlaceholderData } = useMockQuery(["pipeline", period, branch], () => buildPipeline(period, branch));
+  const { data, isPlaceholderData } = useMockQuery(["pipeline", period, branch], () => buildPipeline(period, branch));
 
   return (
     <>
       <TopBar title="Pipeline" subtitle={`${branchLabel} · ${periodLabel}`} />
       <main className={`flex-1 space-y-6 p-7 transition-opacity ${isPlaceholderData ? "opacity-60" : ""}`}>
-        {/* ── Tier 1: what's in the pipeline right now ── */}
-        <HeroBand>
-          {isPending || !data ? (
-            <div className="h-40 animate-pulse rounded-xl bg-white/5" />
-          ) : (
-            <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-xl">
-                <div className="font-label text-[11px] font-semibold uppercase tracking-wider text-[var(--color-accent-on-obsidian)]">
-                  Weighted Pipeline Value &middot; as of today
-                </div>
-                <div className="mt-2 flex items-baseline gap-3">
-                  <AnimatedNumber
-                    value={data.hero.weightedValueAED}
-                    format={formatAEDCompact}
-                    className="text-[50px] font-semibold leading-none tracking-[-0.02em] text-white"
-                  />
-                  <DeltaPill delta={data.weightedDelta} tone="dark" />
-                </div>
-                <p className="mt-1.5 font-label text-[12px] text-[var(--color-on-obsidian-muted)]">{data.weightedDelta.label}</p>
+        {/* ── Tier 1: Horizon Cascade — Executive Deal Stream Command Deck ── */}
+        {!data ? (
+          <ChartSkeleton height={260} />
+        ) : (
+          <HorizonCascade
+            hero={data.hero}
+            weightedDelta={data.weightedDelta}
+            countDelta={data.countDelta}
+            avgDealDelta={data.avgDealDelta}
+            winRate={data.winRate}
+            winRateDelta={data.winRateDelta}
+            stages={data.funnel.stages}
+            cohortSize={data.funnel.cohortSize}
+            cohortWinPct={data.cohortWinPct}
+            periodLabel={periodLabel}
+          />
+        )}
 
-                <p className="mt-5 max-w-md text-[13px] leading-relaxed text-[var(--color-on-obsidian-secondary)]">
-                  <span className="font-semibold text-white">{formatAEDCompact(data.hero.openValueAED)}</span> sits across{" "}
-                  <span className="font-semibold text-white">{formatNumber(data.hero.openCount)}</span> open opportunities, weighted by
-                  stage to a realizable{" "}
-                  <span className="font-semibold text-white">{formatAEDCompact(data.hero.weightedValueAED)}</span>. Win rate is{" "}
-                  <span className="font-semibold text-white">{formatPct(data.winRate, 0)}</span> {periodLabel.toLowerCase()}.
-                </p>
-              </div>
-
-              <div className="grid w-full grid-cols-3 gap-3 lg:w-auto lg:min-w-[420px]">
-                <StatTile
-                  tone="dark"
-                  label="Open Opportunities"
-                  value={formatNumber(data.hero.openCount)}
-                  numeric={{ raw: data.hero.openCount, format: formatNumber }}
-                  delta={data.countDelta}
-                  icon={Layers}
-                />
-                <StatTile
-                  tone="dark"
-                  label="Avg. Deal Size"
-                  value={formatAEDCompact(data.hero.avgDealSizeAED)}
-                  numeric={{ raw: data.hero.avgDealSizeAED, format: formatAEDCompact }}
-                  delta={data.avgDealDelta}
-                  icon={Coins}
-                />
-                <StatTile
-                  tone="dark"
-                  label="Win Rate"
-                  value={formatPct(data.winRate, 0)}
-                  numeric={{ raw: data.winRate, format: (v) => formatPct(v, 0) }}
-                  delta={data.winRateDelta}
-                  deltaCaption={!data.winRateDelta ? periodLabel : undefined}
-                  icon={Percent}
-                />
-              </div>
-            </div>
-          )}
-        </HeroBand>
-
-        {/* ── Tier 2: pipeline movement — cohort funnel + what happened to closed deals ── */}
+        {/* ── Tier 2: Deep Conversion Progression & Win/Loss Ratio ── */}
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <Card className="lg:col-span-2">
-            <CardHeader
-              title="Stage funnel"
-              subtitle={`Opportunities created ${periodLabel.toLowerCase()} — how far they progressed`}
-            />
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-[14.5px] font-semibold tracking-tight text-[var(--color-ink)]">Stage funnel</h3>
+                <p className="mt-0.5 font-label text-[12px] text-[var(--color-ink-muted)]">
+                  Opportunities created {periodLabel.toLowerCase()} — how far they progressed
+                </p>
+              </div>
+              <QuietTag>Active Funnel</QuietTag>
+            </div>
+
             {!data ? (
               <ChartSkeleton height={280} />
             ) : (
               <>
                 <StageFunnel stages={data.funnel.stages} lost={data.funnel.lost} valueFormatter={formatAEDCompact} />
-                <div className="mt-4">
+
+                <div className="mt-5">
                   <InsightCallout
                     tone={data.biggestDrop.pct > 0.4 ? "warning" : "accent"}
                     text={
@@ -233,9 +195,17 @@ export function PipelinePage() {
               </>
             )}
           </Card>
-          <Card>
-            <CardHeader title="Won vs. Lost" subtitle={`Deals closed ${periodLabel.toLowerCase()}`} />
-            {!data ? <ChartSkeleton height={220} /> : <WinLossMirror won={data.wonLost.won} lost={data.wonLost.lost} valueFormatter={formatAEDCompact} />}
+
+          <Card className="flex flex-col justify-between">
+            <div>
+              <CardHeader title="Won vs. Lost" subtitle={`Deals closed ${periodLabel.toLowerCase()}`} />
+              {!data ? <ChartSkeleton height={220} /> : <WinLossMirror won={data.wonLost.won} lost={data.wonLost.lost} valueFormatter={formatAEDCompact} />}
+            </div>
+            {data && (
+              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-sunken)] p-3.5 font-label text-[11.5px] text-[var(--color-ink-secondary)] leading-relaxed">
+                <span className="font-semibold text-[var(--color-ink)]">{formatNumber(data.hero.openCount)}</span> deals currently in active pipeline with a <span className="font-semibold text-[var(--color-ink)]">{formatPct(data.winRate, 0)}</span> historical conversion rate.
+              </div>
+            )}
           </Card>
         </section>
 

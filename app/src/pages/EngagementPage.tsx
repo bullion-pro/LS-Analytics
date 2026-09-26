@@ -71,11 +71,6 @@ function buildEngagement(period: PeriodPreset, branch: BranchFilter) {
   const platformSummary = platformEngagementSummary(months);
   const topPosts = topSocialPosts(months, 6);
 
-  const engagementLeader = [...platformSummary].sort((a, b) => b.avgTotal - a.avgTotal)[0];
-  const deepestEngagement = [...platformSummary].sort(
-    (a, b) => (b.avgComments + b.avgShares) / (b.avgTotal || 1) - (a.avgComments + a.avgShares) / (a.avgTotal || 1),
-  )[0];
-
   return {
     periodMonths: months,
     priorLabel,
@@ -93,8 +88,6 @@ function buildEngagement(period: PeriodPreset, branch: BranchFilter) {
     flowDropOff,
     followers,
     platformSummary,
-    engagementLeader,
-    deepestEngagement,
     topPosts,
   };
 }
@@ -282,27 +275,13 @@ export function EngagementPage() {
           </Card>
         </section>
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
-            <CardHeader title="Engagement by platform" subtitle={`Avg. likes, comments & shares per post · ${periodLabel.toLowerCase()}`} />
+          <div className="lg:col-span-2">
             {!data ? (
-              <ChartSkeleton height={200} />
+              <ChartSkeleton height={280} />
             ) : (
-              <>
-                <PlatformEngagementBars data={data.platformSummary} />
-                {data.engagementLeader && data.deepestEngagement && (
-                  <div className="mt-4">
-                    <InsightCallout
-                      text={
-                        data.engagementLeader.key === data.deepestEngagement.key
-                          ? `${data.engagementLeader.label} leads on both volume and depth of engagement — the highest average engagement per post, and the highest share of that engagement coming from comments and shares rather than likes alone.`
-                          : `${data.engagementLeader.label} drives the most engagement per post overall, but ${data.deepestEngagement.label} sees the highest share of comments and shares relative to likes — a sign of a smaller, more conversational audience worth nurturing.`
-                      }
-                    />
-                  </div>
-                )}
-              </>
+              <PlatformEngagementBars data={data.platformSummary} periodLabel={periodLabel} />
             )}
-          </Card>
+          </div>
           <Card>
             <CardHeader title="Top posts" subtitle={periodLabel} />
             {!data ? <ChartSkeleton height={260} /> : <SocialPostFeed posts={data.topPosts} />}

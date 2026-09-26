@@ -1,7 +1,18 @@
-import { Instagram, Facebook, MessageSquare, Heart, MessageCircle as CommentIcon, Share2 } from "lucide-react";
+import { Heart, MessageCircle as CommentIcon, Share2 } from "lucide-react";
+import {
+  InstagramIcon,
+  FacebookIcon,
+  ThreadsIcon,
+  type SocialIconProps,
+} from "@/components/charts/PlatformEngagementBars";
 import type { SocialPlatform } from "@/mock/engagement";
+import type { ComponentType } from "react";
 
-const PLATFORM_ICON: Record<SocialPlatform, typeof Instagram> = { Instagram, Facebook, Threads: MessageSquare };
+const PLATFORM_ICON: Record<SocialPlatform, ComponentType<SocialIconProps>> = {
+  Instagram: InstagramIcon,
+  Facebook: FacebookIcon,
+  Threads: ThreadsIcon,
+};
 const PLATFORM_TINT: Record<SocialPlatform, string> = {
   Instagram: "bg-[var(--color-accent-light)] text-[var(--color-accent-dark)]",
   Facebook: "bg-[var(--color-seq-100)] text-[var(--color-seq-600)]",
