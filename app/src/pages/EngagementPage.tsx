@@ -10,7 +10,7 @@ import { InsightCallout } from "@/components/ui/InsightCallout";
 import { AwaitingReplyList } from "@/components/ui/AwaitingReplyList";
 import { SocialPostFeed } from "@/components/ui/SocialPostFeed";
 import { BroadcastCampaignList } from "@/components/charts/BroadcastCampaignList";
-import { CompositionBar } from "@/components/charts/CompositionBar";
+import { MessageMixDonut } from "@/components/charts/MessageMixDonut";
 import { TrendLine } from "@/components/charts/TrendLine";
 import { TargetMeter } from "@/components/charts/TargetMeter";
 import { RadialGauge } from "@/components/charts/RadialGauge";
@@ -183,9 +183,19 @@ export function EngagementPage() {
               </>
             )}
           </Card>
-          <Card>
-            <CardHeader title="Message mix" subtitle="By pricing category, this period" />
-            {!data ? <ChartSkeleton height={160} /> : <CompositionBar data={data.messageMix} valueFormatter={formatCount} />}
+          <Card className="flex flex-col">
+            <CardHeader
+              title="Message mix"
+              subtitle={`By Meta pricing tier · ${periodLabel.toLowerCase()}`}
+              action={
+                data && (
+                  <span className="font-label text-[10.5px] font-bold text-[#8a6c38] bg-[rgba(176,141,79,0.12)] border border-[rgba(176,141,79,0.25)] rounded-full px-2.5 py-0.5">
+                    {formatNumber(data.messageMix.reduce((a, b) => a + b.value, 0))} Total
+                  </span>
+                )
+              }
+            />
+            {!data ? <ChartSkeleton height={280} /> : <MessageMixDonut data={data.messageMix} periodLabel={periodLabel} />}
           </Card>
         </section>
 
