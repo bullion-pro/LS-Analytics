@@ -14,6 +14,7 @@ export interface HorizonCascadeProps {
   cohortSize?: number;
   cohortWinPct?: number;
   periodLabel?: string;
+  biggestDrop?: { fromLabel: string; toLabel: string; dropped: number; pct: number };
 }
 
 const STAGE_METADATA: {
@@ -61,6 +62,7 @@ export function HorizonCascade({
   stages,
   cohortWinPct = 0.48,
   periodLabel = "last 30 days",
+  biggestDrop,
 }: HorizonCascadeProps) {
   const [selectedStageIdx, setSelectedStageIdx] = useState<number | null>(null);
 
@@ -71,6 +73,8 @@ export function HorizonCascade({
   // Selected stage or default macro view
   const selectedStage = selectedStageIdx !== null ? activeStages[selectedStageIdx] : null;
   const selectedMeta = selectedStageIdx !== null ? STAGE_METADATA[selectedStageIdx] : null;
+  const selectedPrev = selectedStageIdx !== null && selectedStageIdx > 0 ? activeStages[selectedStageIdx - 1] : null;
+  const selectedDropped = selectedPrev && selectedStage ? selectedPrev.count - selectedStage.count : 0;
 
   return (
     <div
@@ -143,8 +147,10 @@ export function HorizonCascade({
                 <>
                   <strong className="text-[#16130f]">{selectedStage.label}</strong> currently commands{" "}
                   <strong className="text-[#16130f]">{formatAEDCompact(selectedStage.valueAED)}</strong> across{" "}
-                  <strong className="text-[#16130f]">{formatNumber(selectedStage.count)}</strong> opportunities with an
-                  estimated realizable discount factor of <strong className="text-[#16130f]">{selectedMeta?.conversionFactor}</strong>.
+                  <strong className="text-[#16130f]">{formatNumber(selectedStage.count)}</strong> opportunities{" "}
+                  ({Math.round((selectedStage.count / baseCount) * 100)}% volume
+                  {selectedPrev && selectedDropped > 0 ? ` · ${selectedDropped} dropped off from ${selectedPrev.label}` : ""}
+                  ) with a realizable factor of <strong className="text-[#16130f]">{selectedMeta?.conversionFactor}</strong>.
                 </>
               ) : (
                 <>
@@ -286,6 +292,8 @@ export function HorizonCascade({
               </strong>{" "}
               {selectedStage
                 ? selectedMeta?.insight
+                : biggestDrop && biggestDrop.dropped > 0
+                ? `The steepest drop-off is between ${biggestDrop.fromLabel} and ${biggestDrop.toLabel} (${Math.round(biggestDrop.pct * 100)}% exit). Initial enquiries convert with 90% velocity into high-intent showroom visits.`
                 : "90% of enquiries progress to product interest with zero drop-off in showroom velocity. Showroom Visit represents the highest value retention threshold."}
             </span>
           </div>

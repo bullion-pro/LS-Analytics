@@ -3,10 +3,8 @@ import { TopBar } from "@/components/layout/TopBar";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { ChartSkeleton } from "@/components/ui/ChartSkeleton";
 import { InsightCallout } from "@/components/ui/InsightCallout";
-import { QuietTag } from "@/components/ui/QuietTag";
 import { DataTable } from "@/components/ui/DataTable";
 import { OpportunityAttentionList } from "@/components/ui/OpportunityAttentionList";
-import { StageFunnel } from "@/components/charts/StageFunnel";
 import { HorizonCascade } from "@/components/charts/HorizonCascade";
 import { WinLossMirror } from "@/components/charts/WinLossMirror";
 import { SeverityCompositionBar } from "@/components/charts/SeverityCompositionBar";
@@ -160,56 +158,11 @@ export function PipelinePage() {
             cohortSize={data.funnel.cohortSize}
             cohortWinPct={data.cohortWinPct}
             periodLabel={periodLabel}
+            biggestDrop={data.biggestDrop}
           />
         )}
 
-        {/* ── Tier 2: Deep Conversion Progression & Win/Loss Ratio ── */}
-        <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-[14.5px] font-semibold tracking-tight text-[var(--color-ink)]">Stage funnel</h3>
-                <p className="mt-0.5 font-label text-[12px] text-[var(--color-ink-muted)]">
-                  Opportunities created {periodLabel.toLowerCase()} — how far they progressed
-                </p>
-              </div>
-              <QuietTag>Active Funnel</QuietTag>
-            </div>
-
-            {!data ? (
-              <ChartSkeleton height={280} />
-            ) : (
-              <>
-                <StageFunnel stages={data.funnel.stages} lost={data.funnel.lost} valueFormatter={formatAEDCompact} />
-
-                <div className="mt-5">
-                  <InsightCallout
-                    tone={data.biggestDrop.pct > 0.4 ? "warning" : "accent"}
-                    text={
-                      data.biggestDrop.dropped > 0
-                        ? `The steepest drop-off is between ${data.biggestDrop.fromLabel} and ${data.biggestDrop.toLabel} — ${formatPct(data.biggestDrop.pct, 0)} of deals that reach ${data.biggestDrop.fromLabel} don't make it to ${data.biggestDrop.toLabel}. Of the full cohort, ${formatPct(data.cohortWinPct, 0)} eventually close won.`
-                        : `Every stage is converting cleanly this period — ${formatPct(data.cohortWinPct, 0)} of the cohort closes won.`
-                    }
-                  />
-                </div>
-              </>
-            )}
-          </Card>
-
-          <Card className="flex flex-col justify-between">
-            <div>
-              <CardHeader title="Won vs. Lost" subtitle={`Deals closed ${periodLabel.toLowerCase()}`} />
-              {!data ? <ChartSkeleton height={220} /> : <WinLossMirror won={data.wonLost.won} lost={data.wonLost.lost} valueFormatter={formatAEDCompact} />}
-            </div>
-            {data && (
-              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-sunken)] p-3.5 font-label text-[11.5px] text-[var(--color-ink-secondary)] leading-relaxed">
-                <span className="font-semibold text-[var(--color-ink)]">{formatNumber(data.hero.openCount)}</span> deals currently in active pipeline with a <span className="font-semibold text-[var(--color-ink)]">{formatPct(data.winRate, 0)}</span> historical conversion rate.
-              </div>
-            )}
-          </Card>
-        </section>
-
-        {/* ── Tier 3: where the pipeline is healthy, and where value is concentrated ── */}
+        {/* ── Tier 2: Pipeline Velocity & Concentration — Time in stage & Top opportunities ── */}
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardHeader title="Time in current stage" subtitle="Open pipeline value, by days since last stage change" />
@@ -237,7 +190,7 @@ export function PipelinePage() {
           </Card>
         </section>
 
-        {/* ── Tier 4: what's driving the pipeline — channels and people ── */}
+        {/* ── Tier 3: Channels & Team — What's driving deal flow ── */}
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardHeader title="Channel performance" subtitle="Win rate vs. average deal value, by lead source — bubble size = deal volume" />
@@ -267,7 +220,7 @@ export function PipelinePage() {
           </Card>
         </section>
 
-        {/* ── Tier 5: what needs a decision this week ── */}
+        {/* ── Tier 4: Immediate Decisions & Risk — Deals needing attention ── */}
         <section className="grid grid-cols-1 gap-5">
           <Card>
             <CardHeader title="Needs attention" subtitle="Overdue past expected close, stalled 45+ days in-stage, or on hold" />
@@ -275,15 +228,30 @@ export function PipelinePage() {
           </Card>
         </section>
 
-        {/* ── Tier 6: is conversion quality improving, and the full detail underneath ── */}
-        <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {/* ── Tier 5: Conversion Outcomes & Trajectory — Closed deals mirror & YoY win rate ── */}
+        <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <Card className="flex flex-col justify-between">
+            <div>
+              <CardHeader title="Won vs. Lost outcomes" subtitle={`Deals closed ${periodLabel.toLowerCase()} · Volume, value & sales velocity`} />
+              {!data ? <ChartSkeleton height={220} /> : <WinLossMirror won={data.wonLost.won} lost={data.wonLost.lost} valueFormatter={formatAEDCompact} />}
+            </div>
+            {data && (
+              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-sunken)] p-3.5 font-label text-[11.5px] text-[var(--color-ink-secondary)] leading-relaxed">
+                <span className="font-semibold text-[var(--color-ink)]">{formatNumber(data.hero.openCount)}</span> deals currently in active pipeline with a <span className="font-semibold text-[var(--color-ink)]">{formatPct(data.winRate, 0)}</span> historical conversion rate.
+              </div>
+            )}
+          </Card>
           <Card>
-            <CardHeader title="Win rate trend" subtitle="Last 12 months, vs. the same months last year" />
+            <CardHeader title="Win rate trend YoY" subtitle="Monthly conversion percentage vs. prior year" />
             {!data ? <ChartSkeleton height={220} /> : <TrendLine data={data.winTrend} currentLabel="This year" priorLabel="Last year" valueFormatter={(v) => `${v}%`} height={220} />}
           </Card>
-          <Card className="lg:col-span-2">
-            <CardHeader title="Open pipeline" subtitle="Every open opportunity · sortable" />
-            {!data ? <ChartSkeleton height={260} /> : <DataTable data={data.table} columns={openPipelineColumns} pageSize={5} />}
+        </section>
+
+        {/* ── Tier 6: Full Opportunity Ledger — Uncramped sortable table ── */}
+        <section className="grid grid-cols-1 gap-5">
+          <Card>
+            <CardHeader title="Open pipeline opportunities" subtitle="Comprehensive ledger of every active deal · sortable by value, stage, and salesperson" />
+            {!data ? <ChartSkeleton height={280} /> : <DataTable data={data.table} columns={openPipelineColumns} pageSize={8} />}
           </Card>
         </section>
       </main>
